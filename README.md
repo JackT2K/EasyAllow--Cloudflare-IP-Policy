@@ -83,6 +83,7 @@ These steps assume:
 
 ### 1. Clone the repository
 git clone https://github.com/JackT2K/EasyAllow--Cloudflare-IP-Policy.git
+
 cd EasyAllow--Cloudflare-IP-Policy
 
 ### 2. Install system dependencies
