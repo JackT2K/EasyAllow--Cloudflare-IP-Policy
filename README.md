@@ -1,123 +1,157 @@
-# EasyAllow--Cloudflare-IP-Policy
-Simple Python powered website that is inteded to be used with a cloudflare tunnel. This when ran will allow you to access this site protected with an identity provider and easily add your current IP to a bypass policy. 
+# EasyAllow – Cloudflare Access IP Bypass Portal
 
+EasyAllow is a self‑service web portal that allows administrators to temporarily add and remove IP addresses from Cloudflare Access *Bypass* policies.
 
-Cloudflare Access IP Bypass Portal – From-Scratch Deployment Guide 
+It is intended for environments using Cloudflare Access with Entra ID (Azure AD) where admins need a fast, controlled way to bypass identity prompts from trusted locations without permanently modifying allowlists.
 
-✅ Secure self‑service web portal ✅ Protected by Cloudflare Access + Azure AD ✅ Allows adding/removing IPs to Bypass Access policies ✅ Automatic expiration (TTL cleanup) ✅ No hard‑coded policy IDs – live dropdown of Bypass policies ✅ Runs behind Cloudflare Tunnel (HTTPS handled by Cloudflare) 
+The application runs entirely behind Cloudflare Access via a Cloudflare Tunnel. TLS, authentication, and identity are enforced by Cloudflare.
 
-1. Architecture Overview 
+---
 
-    Browser 
-      ↓ 
-    Cloudflare Access (Azure AD) 
-      ↓ 
-    Cloudflare Tunnel 
-      ↓ 
-    FastAPI app (127.0.0.1:8000) 
-      ↓ 
-    Cloudflare Access API (reusable policies) 
+## Features
 
-The app: 
+- Protected by Cloudflare Access and Entra ID (Azure AD)
+- Automatically detects the client’s current WAN IP
+- Manually add or remove IP addresses
+- Select from all reusable Cloudflare Access policies with decision = bypass
+- Time‑limited access (minutes, hours, or unlimited)
+- Automatic cleanup of expired IPs
+- No public ports exposed
+- No TLS or certificate management
+- SQLite backend (no external database)
 
-Is never publicly exposed 
-Trusts Cloudflare headers only 
-Edits Reusable Access Policies with decision = bypass 
+---
 
-2. Prerequisites (Assumed Done) 
+## Architecture Overview
 
-This guide does NOT cover: 
-Ubuntu installation 
-Cloudflare Tunnel setup 
+Browser  
+→ Cloudflare Access (Azure AD)  
+→ Cloudflare Tunnel  
+→ FastAPI app (127.0.0.1:8000)  
+→ Cloudflare Access API (Reusable Bypass Policies)
 
-You must already have: 
-✅ Ubuntu 22.04+ 
-✅ Working Cloudflare Tunnel mapping subdomain.domain.tld → http://127.0.0.1:8000 
-✅ Cloudflare Access Application protecting subdomain.domain.tld
-✅ At least one Reusable Access Policy with Decision = Bypass 
+The application does not validate Azure tokens itself. Cloudflare Access is treated as the trust boundary. Requests without Cloudflare headers are rejected.
 
-3. Cloudflare API Token 
+---
 
-Create an API token with these permissions: 
-Scope    Permission 
-Account  Access: Apps and Policies Read 
-Account  Access: Apps and Policies Edit 
+## Cloudflare Access Model (Important)
 
-Save: 
-API Token 
-Account ID 
+EasyAllow relies on two separate policy types:
 
-4. System Packages
+1. Bypass policies (IP‑based)
+- Decision: bypass
+- Rules: IP ranges only
+- No identity requirements
 
-sudo apt update 
+EasyAllow dynamically edits these policies.
+
+2. Allow policies (identity‑based)
+- Decision: allow
+- Rules: Entra ID users or groups
+
+These remain unchanged and continue to enforce Azure login when no bypass applies.
+
+Important: using an Allow policy will still trigger Azure authentication. To skip Azure AD entirely, IP rules must live in a Bypass policy with higher precedence.
+
+---
+
+## Requirements
+
+### Platform
+- Ubuntu 22.04 or newer
+- Python 3.10+
+
+### Cloudflare
+- Cloudflare Tunnel already configured to route a hostname to http://127.0.0.1:8000
+- Cloudflare Access application protecting that hostname
+- At least one reusable Cloudflare Access policy with decision = bypass
+
+### Cloudflare API Token
+The API token must have the following permissions:
+
+Account → Access: Apps and Policies → Read  
+Account → Access: Apps and Policies → Edit  
+
+---
+
+## Deployment
+
+These steps assume:
+- Ubuntu is already installed
+- Cloudflare Tunnel is already configured
+- Cloudflare Access is already protecting the hostname
+
+### 1. Clone the repository
+git clone https://github.com/JackT2K/EasyAllow--Cloudflare-IP-Policy.git
+cd EasyAllow--Cloudflare-IP-Policy
+
+### 2. Install system dependencies
+
+sudo apt update
 sudo apt install -y python3 python3-venv python3-pip sqlite3 curl
 
-5. Directory Layout 
-    /opt/ip-allow 
-    ├── app
-    │   ├── main.py 
-    │   ├── cloudflare.py 
-    │   ├── cleanup.py 
-    │   ├── db.py 
-    │   ├── utils.py 
-    │   └── templates 
-    │       └── index.html 
-    ├── ip_allow.db 
-    ├── requirements.txt 
-    ├── .env 
-    └── systemd 
-        ├── ip-allow.service 
-        └── ip-allow-cleanup.timer
+### 3. Create and activate a Python virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-Create It
-1     sudo mkdir -p /opt/ip-allow/app/templates /opt/ip-allow/systemd 
-2     sudo chown -R $USER:$USER /opt/ip-allow 
-3     cd /opt/ip-allow 
+### 4. Install Python requirements
+pip install -r requirements.txt
 
-6. Python Virtual Environment 
+### 5. Configure environment variables
 
-1     python3 -m venv venv 
-2     source venv/bin/activate 
+Edit the `.env` file and populate it with your Cloudflare details:
 
-7. Python Requirements 
+CF_API_TOKEN=your_cloudflare_api_token
+CF_ACCOUNT_ID=your_account_id
 
-nano /opt/ip-allow/requirements.txt 
+Set permissions:
 
-fastapi 
-uvicorn 
-jinja2 
-requests 
-python-dotenv 
-python-multipart 
+chmod 600 .env
 
-Install: 
+### 6. Initialize the database
 
-pip install -r requirements.txt 
+sqlite3 ip_allow.db <<EOF
+CREATE TABLE IF NOT EXISTS ip_allowlist (
+ip TEXT PRIMARY KEY,
+expires_at INTEGER,
+added_at INTEGER NOT NULL,
+policy_id TEXT
+);
+EOF
 
-8. Environment Variables 
+### 7. Install systemd services
+sudo cp systemd/.service systemd/.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now ip-allow
+sudo systemctl enable --now ip-allow-cleanup.timer
 
-nano /opt/ip-allow/.env 
+### 8. Validation
 
-CF_API_TOKEN=REDACTED 
-CF_ACCOUNT_ID=REDACTED    
+Local access (should be blocked):
 
-Permissions: 
-chmod 600 .env 
+curl http://127.0.0.1:8000
 
-9. Database Initialization 
+Expected response:
+403 Forbidden
 
-sqlite3 ip_allow.db <<'SQL' 
-CREATE TABLE IF NOT EXISTS ip_allowlist ( 
-  ip TEXT PRIMARY KEY, 
-  expires_at INTEGER, 
-  added_at INTEGER NOT NULL, 
-  policy_id TEXT 
-); 
-SQL 
+Browser access:
+- Navigate to the hostname protected by Cloudflare Access
+- Authenticate via Entra ID
+- The EasyAllow UI should load
+- Bypass policies should appear in the dropdown
 
-Install and Enable
 
-sudo cp systemd/*.service systemd/*.timer /etc/systemd/system/ 
-sudo systemctl daemon-reload 
-sudo systemctl enable --now ip-allow ip-allow-cleanup.timer 
+## Security Notes
 
+- The application only accepts requests containing Cloudflare headers
+- No credentials are stored locally
+- The Cloudflare API token is scoped only to Access policies
+- The app should never be exposed without Cloudflare Access in front of it
+
+
+## Common Pitfalls
+
+- Using an Allow policy instead of a Bypass policy
+- Placing the Bypass policy below identity‑based policies
+- API token missing Access policy read permissions
+- Expecting bypass behavior without policy precedence configured correctly
