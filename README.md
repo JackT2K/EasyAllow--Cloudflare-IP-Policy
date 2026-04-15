@@ -22,6 +22,22 @@ The application runs entirely behind Cloudflare Access via a Cloudflare Tunnel. 
 
 ---
 
+
+## Screenshots
+
+### Main Interface
+![Main Interface](Images/Main.png)
+
+### Policy Selection
+![Policy List](Images/PolicyList.png)
+
+### Time Selection
+![Time Selection](Images/Time%20Selection.png)
+
+### Example – Active IPs
+![Example](Images/Example.png)
+
+
 ## Architecture Overview
 
 Browser  
