@@ -8,55 +8,39 @@ Cloudflare Access IP Bypass Portal – From-Scratch Deployment Guide
 
 1. Architecture Overview 
 
-1     Browser 
-
-2       ↓ 
-
-3     Cloudflare Access (Azure AD) 
-
-4       ↓ 
-
-5     Cloudflare Tunnel 
-
-6       ↓ 
-
-7     FastAPI app (127.0.0.1:8000) 
-
-8       ↓ 
-
-9    Cloudflare Access API (reusable policies) 
+    Browser 
+      ↓ 
+    Cloudflare Access (Azure AD) 
+      ↓ 
+    Cloudflare Tunnel 
+      ↓ 
+    FastAPI app (127.0.0.1:8000) 
+      ↓ 
+    Cloudflare Access API (reusable policies) 
 
 The app: 
 
 Is never publicly exposed 
-
 Trusts Cloudflare headers only 
-
 Edits Reusable Access Policies with decision = bypass 
 
 2. Prerequisites (Assumed Done) 
 
 This guide does NOT cover: 
-
 Ubuntu installation 
-
 Cloudflare Tunnel setup 
 
 You must already have: 
-
 ✅ Ubuntu 22.04+ 
 ✅ Working Cloudflare Tunnel mapping subdomain.domain.tld → http://127.0.0.1:8000 
 ✅ Cloudflare Access Application protecting subdomain.domain.tld
 ✅ At least one Reusable Access Policy with Decision = Bypass 
 
-. Cloudflare API Token 
+3. Cloudflare API Token 
 
 Create an API token with these permissions: 
-
 Scope    Permission 
-
 Account  Access: Apps and Policies Read 
-
 Account  Access: Apps and Policies Edit 
 
 Save: 
@@ -64,8 +48,9 @@ API Token
 Account ID 
 
 4. System Packages
-1     sudo apt update 
-2     sudo apt install -y python3 python3-venv python3-pip sqlite3 curl
+
+sudo apt update 
+sudo apt install -y python3 python3-venv python3-pip sqlite3 curl
 
 5. Directory Layout 
     /opt/ip-allow 
@@ -107,7 +92,7 @@ python-multipart
 
 Install: 
 
-1     pip install -r requirements.txt 
+pip install -r requirements.txt 
 
 8. Environment Variables 
 
@@ -117,8 +102,7 @@ CF_API_TOKEN=REDACTED
 CF_ACCOUNT_ID=REDACTED    
 
 Permissions: 
-
-1     chmod 600 .env 
+chmod 600 .env 
 
 9. Database Initialization 
 
