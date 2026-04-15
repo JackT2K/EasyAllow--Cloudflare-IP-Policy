@@ -79,7 +79,9 @@ Important: using an Allow policy will still trigger IDP authentication. To skip 
 
 ### Cloudflare
 - Cloudflare Tunnel already configured to route a hostname to http://127.0.0.1:8000
+  https://developers.cloudflare.com/tunnel/setup/
 - Cloudflare Access application protecting that hostname
+  https://developers.cloudflare.com/cloudflare-one/access-controls/applications/non-http/self-hosted-private-app/
 - At least one reusable Cloudflare Access policy with decision = bypass
 
 ### Cloudflare API Token
