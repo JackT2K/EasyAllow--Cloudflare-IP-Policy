@@ -156,7 +156,7 @@ Expected response:
 
 Browser access:
 - Navigate to the hostname protected by Cloudflare Access
-- Authenticate via Entra ID
+- Authenticate via IDP
 - The EasyAllow UI should load
 - Bypass policies should appear in the dropdown
 
