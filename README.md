@@ -6,6 +6,7 @@ It is intended for environments using Cloudflare Access with Entra ID (Azure AD)
 
 The application runs entirely behind Cloudflare Access via a Cloudflare Tunnel. TLS, authentication, and identity are enforced by Cloudflare.
 
+> Transparency note: This project was developed with the assistance of AI tools. All code and documentation have been reviewed, tested, and finalized by the author.
 ---
 
 ## Features
