@@ -2,7 +2,7 @@
 
 EasyAllow is a self‑service web portal that allows administrators to temporarily add and remove IP addresses from Cloudflare Access *Bypass* policies.
 
-It is intended for environments using Cloudflare Access with Entra ID (Azure AD) or other identy providors where admins need a fast, controlled way to bypass identity prompts from trusted locations without permanently modifying allowlists.
+It is intended for environments using Cloudflare Access with Entra ID (Azure AD) or other identy providors (IDP) where admins need a fast, controlled way to bypass identity prompts from trusted locations without permanently modifying allowlists.
 
 The application runs entirely behind Cloudflare Access via a Cloudflare Tunnel. TLS, authentication, and identity are enforced by Cloudflare.
 
@@ -10,7 +10,7 @@ The application runs entirely behind Cloudflare Access via a Cloudflare Tunnel. 
 
 ## Features
 
-- Protected by Cloudflare Access and Entra ID (Azure AD)
+- Protected by Cloudflare Access and Configured Identity Providor
 - Automatically detects the client’s current WAN IP
 - Manually add or remove IP addresses
 - Select from all reusable Cloudflare Access policies with decision = bypass
@@ -25,12 +25,12 @@ The application runs entirely behind Cloudflare Access via a Cloudflare Tunnel. 
 ## Architecture Overview
 
 Browser  
-→ Cloudflare Access (Azure AD)  
+→ Cloudflare Access
 → Cloudflare Tunnel  
 → FastAPI app (127.0.0.1:8000)  
 → Cloudflare Access API (Reusable Bypass Policies)
 
-The application does not validate Azure tokens itself. Cloudflare Access is treated as the trust boundary. Requests without Cloudflare headers are rejected.
+The application does not validate tokens itself. Cloudflare Access is treated as the trust boundary. Requests without Cloudflare headers are rejected.
 
 ---
 
@@ -47,11 +47,11 @@ EasyAllow dynamically edits these policies.
 
 2. Allow policies (identity‑based)
 - Decision: allow
-- Rules: Entra ID users or groups
+- Rules: IDP users or groups
 
-These remain unchanged and continue to enforce Azure login when no bypass applies.
+These remain unchanged and continue to enforce IDP login when no bypass applies.
 
-Important: using an Allow policy will still trigger Azure authentication. To skip Azure AD entirely, IP rules must live in a Bypass policy with higher precedence.
+Important: using an Allow policy will still trigger IDP authentication. To skip IDP authentication entirely, IP rules must live in a Bypass policy with higher precedence.
 
 ---
 
