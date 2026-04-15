@@ -1,50 +1,82 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cloudflare IP Bypass</title>
   <meta charset="utf-8">
+  <title>Temporary IP Allow</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
-  <div class="max-w-2xl mx-auto py-10">
+  <div class="max-w-2xl mx-auto py-10 px-4">
     <div class="bg-white p-6 rounded-xl shadow">
-
-      <h1 class="text-2xl font-semibold mb-4">Temporary IP Bypass</h1>
+      <h1 class="text-2xl font-semibold mb-4">Temporary IP Allow</h1>
 
       <form method="post" action="/add" class="space-y-3">
-        <input name="ip" value="{{ wan_ip }}" class="w-full border p-2 rounded font-mono" required>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">IP Address</label>
+          <input name="ip" value="{{ wan_ip }}" class="mt-1 w-full border p-2 rounded font-mono" required>
+        </div>
 
-        <select name="policy_id" class="w-full border p-2 rounded" required>
-          {% for p in bypass_policies %}
-            <option value="{{ p.id }}">{{ p.name }}</option>
-          {% endfor %}
-        </select>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Bypass policy</label>
+          <select name="policy_id"
+                  class="mt-1 w-full border p-2 rounded"
+                  onchange="location='/?policy_id=' + this.value"
+                  required>
+            {% for p in bypass_policies %}
+              <option value="{{ p.id }}" {% if p.id == selected_policy_id %}selected{% endif %}>
+                {{ p.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
 
-        <select name="duration" class="w-full border p-2 rounded">
-          <option value="900">15 minutes</option>
-          <option value="3600">1 hour</option>
-          <option value="21600">6 hours</option>
-          <option value="86400">24 hours</option>
-          <option value="0">Unlimited</option>
-        </select>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Duration</label>
+          <select name="duration" class="mt-1 w-full border p-2 rounded">
+            <option value="900">15 minutes</option>
+            <option value="3600">1 hour</option>
+            <option value="21600">6 hours</option>
+            <option value="86400">24 hours</option>
+            <option value="0">Unlimited</option>
+          </select>
+        </div>
 
-        <button class="w-full bg-blue-600 text-white p-2 rounded">Allow IP</button>
+        <button class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
+          Allow IP
+        </button>
       </form>
 
       <hr class="my-6">
 
-      <h2 class="font-semibold mb-2">Active Bypasses</h2>
+      <h2 class="text-lg font-semibold mb-2">Currently Allowed (Selected Policy)</h2>
+
+      {% if items|length == 0 %}
+        <p class="text-gray-600">No IPs currently allowed for this policy.</p>
+      {% endif %}
 
       {% for item in items %}
         <div class="flex justify-between items-center border-b py-2">
-          <span class="font-mono">{{ item.ip }}</span>
-          <form method="post" action="/remove">
-            <input type="hidden" name="ip" value="{{ item.ip }}">
-            <input type="hidden" name="policy_id" value="{{ item.policy_id }}">
-            <button class="text-red-600">Remove</button>
-          </form>
+          <div>
+            <div class="font-mono">{{ item.ip }}</div>
+            <div class="text-xs text-gray-500">{{ item.policy_name }}</div>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <div class="text-sm text-gray-600">
+              {% if item.expires_at is none %}
+                Unlimited
+              {% else %}
+                {{ (item.remaining // 60) }} min
+              {% endif %}
+            </div>
+
+            <form method="post" action="/remove">
+              <input type="hidden" name="ip" value="{{ item.ip }}">
+              <input type="hidden" name="policy_id" value="{{ item.policy_id }}">
+              <button class="text-red-600 hover:underline">Remove</button>
+            </form>
+          </div>
         </div>
       {% endfor %}
 
