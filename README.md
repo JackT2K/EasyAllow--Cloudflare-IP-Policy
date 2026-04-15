@@ -2,7 +2,7 @@
 
 EasyAllow is a self‑service web portal that allows administrators to temporarily add and remove IP addresses from Cloudflare Access *Bypass* policies.
 
-It is intended for environments using Cloudflare Access with Entra ID (Azure AD) where admins need a fast, controlled way to bypass identity prompts from trusted locations without permanently modifying allowlists.
+It is intended for environments using Cloudflare Access with Entra ID (Azure AD) or other identy providors where admins need a fast, controlled way to bypass identity prompts from trusted locations without permanently modifying allowlists.
 
 The application runs entirely behind Cloudflare Access via a Cloudflare Tunnel. TLS, authentication, and identity are enforced by Cloudflare.
 
