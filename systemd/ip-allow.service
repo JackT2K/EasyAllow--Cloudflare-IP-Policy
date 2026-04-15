@@ -1,0 +1,12 @@
+[Unit]
+Description=Cloudflare IP Allow App
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/ip-allow
+Environment=PYTHONPATH=/opt/ip-allow
+ExecStart=/opt/ip-allow/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

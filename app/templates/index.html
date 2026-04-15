@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cloudflare IP Bypass</title>
+  <meta charset="utf-8">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-2xl mx-auto py-10">
+    <div class="bg-white p-6 rounded-xl shadow">
+
+      <h1 class="text-2xl font-semibold mb-4">Temporary IP Bypass</h1>
+
+      <form method="post" action="/add" class="space-y-3">
+        <input name="ip" value="{{ wan_ip }}" class="w-full border p-2 rounded font-mono" required>
+
+        <select name="policy_id" class="w-full border p-2 rounded" required>
+          {% for p in bypass_policies %}
+            <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="duration" class="w-full border p-2 rounded">
+          <option value="900">15 minutes</option>
+          <option value="3600">1 hour</option>
+          <option value="21600">6 hours</option>
+          <option value="86400">24 hours</option>
+          <option value="0">Unlimited</option>
+        </select>
+
+        <button class="w-full bg-blue-600 text-white p-2 rounded">Allow IP</button>
+      </form>
+
+      <hr class="my-6">
+
+      <h2 class="font-semibold mb-2">Active Bypasses</h2>
+
+      {% for item in items %}
+        <div class="flex justify-between items-center border-b py-2">
+          <span class="font-mono">{{ item.ip }}</span>
+          <form method="post" action="/remove">
+            <input type="hidden" name="ip" value="{{ item.ip }}">
+            <input type="hidden" name="policy_id" value="{{ item.policy_id }}">
+            <button class="text-red-600">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+
+    </div>
+  </div>
+</body>
+</html>
